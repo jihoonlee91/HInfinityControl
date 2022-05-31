@@ -3,6 +3,8 @@ close all
 clear all
 clc
 
+addpath(genpath([pwd,'\LPVToolsV1.0']))
+
 spec_data % load specification
 aero_data % load aerodynamic data
 
@@ -43,12 +45,26 @@ for n = 1:n_eta1
         C = [Cp,Dp;zeros(1,2),1];
         D = [zeros(3,1);0];
         Gsp(:,:,n,m) = ss(A,B,C,D); % short-period mode dynamics
-        Gfull(:,:,n,m) = Glon;
     end
 end
 
 Domain = rgrid(eta1_pgrid,eta2_pgrid);
 global Glpv
 Glpv = pss(Gsp,Domain);
-Glpvfull = pss(Gfull,Domain);
 
+%%
+
+%% H-infinity controller design
+eta = [0.5; 0.5];
+% W1 = makeweight(10,[1,0.1],0.01);
+% W2 = makeweight(0.1,[32,0.32],1);
+% W3 = makeweight(0.01,[1,0.1],10);
+W1 = makeweight(10,[1,0.1],0.01);
+W2 = [];
+W3 = makeweight(0.01,[1,0.1],10);
+
+[K,CL,gamma,info,G] = mixsyndesign(W1,W2,W3,eta);
+gamma
+
+%% Simulation
+step(CL,30)
